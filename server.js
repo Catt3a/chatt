@@ -10,14 +10,31 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.static("public"));
 
+const messages = [];
+
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
 
+  // Отправляем новому пользователю старые сообщения
+  socket.emit("chat history", messages);
+
   socket.on("chat message", (data) => {
-    io.emit("chat message", {
+    const newMessage = {
       username: data.username || "Anonymous",
-      message: data.message
-    });
+      message: data.message,
+      time: Date.now()
+    };
+
+    // Сохраняем сообщение в памяти сервера
+    messages.push(newMessage);
+
+    // Ограничиваем историю 100 сообщениями
+    if (messages.length > 100) {
+      messages.shift();
+    }
+
+    // Отправляем всем пользователям
+    io.emit("chat message", newMessage);
   });
 
   socket.on("disconnect", () => {
