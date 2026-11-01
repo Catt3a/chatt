@@ -1,63 +1,186 @@
-<script src="/socket.io/socket.io.js"></script>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simple Chat</title>
 
-<script>
-  const socket = io();
-
-  const form = document.getElementById("form");
-  const username = document.getElementById("username");
-  const message = document.getElementById("message");
-  const messages = document.getElementById("messages");
-
-  function addMessage(data) {
-    const div = document.createElement("div");
-    div.className = "message";
-
-    const name = document.createElement("div");
-    name.className = "username";
-    name.textContent = data.username;
-
-    const text = document.createElement("div");
-    text.textContent = data.message;
-
-    div.appendChild(name);
-    div.appendChild(text);
-
-    messages.appendChild(div);
-  }
-
-  // Получаем историю при загрузке страницы
-  socket.on("chat history", (history) => {
-    messages.innerHTML = "";
-
-    history.forEach((data) => {
-      addMessage(data);
-    });
-
-    messages.scrollTop = messages.scrollHeight;
-  });
-
-  // Новое сообщение
-  socket.on("chat message", (data) => {
-    addMessage(data);
-    messages.scrollTop = messages.scrollHeight;
-  });
-
-  form.addEventListener("submit", (event) => {
-    event.preventDefault();
-
-    const name = username.value.trim();
-    const text = message.value.trim();
-
-    if (!name || !text) {
-      return;
+  <style>
+    * {
+      box-sizing: border-box;
     }
 
-    socket.emit("chat message", {
-      username: name,
-      message: text
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+    }
+
+    .chat {
+      max-width: 600px;
+      height: 100vh;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      background: white;
+    }
+
+    h1 {
+      margin: 0;
+      padding: 20px;
+      background: #222;
+      color: white;
+      font-size: 20px;
+    }
+
+    #messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 15px;
+    }
+
+    .message {
+      margin-bottom: 12px;
+      padding: 10px 12px;
+      background: #eee;
+      border-radius: 8px;
+    }
+
+    .username {
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+
+    form {
+      display: flex;
+      gap: 8px;
+      padding: 10px;
+      border-top: 1px solid #ddd;
+    }
+
+    input {
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    #username {
+      width: 120px;
+    }
+
+    #message {
+      flex: 1;
+    }
+
+    button {
+      padding: 12px 18px;
+      border: 0;
+      border-radius: 6px;
+      background: #222;
+      color: white;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #444;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="chat">
+
+    <h1>💬 Simple Chat</h1>
+
+    <div id="messages"></div>
+
+    <form id="form">
+      <input
+        id="username"
+        type="text"
+        placeholder="Имя"
+        maxlength="30"
+        required
+      >
+
+      <input
+        id="message"
+        type="text"
+        placeholder="Сообщение..."
+        maxlength="500"
+        required
+      >
+
+      <button type="submit">Отправить</button>
+    </form>
+
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+
+  <script>
+    const socket = io();
+
+    const form = document.getElementById("form");
+    const username = document.getElementById("username");
+    const message = document.getElementById("message");
+    const messages = document.getElementById("messages");
+
+    function addMessage(data) {
+      const div = document.createElement("div");
+      div.className = "message";
+
+      const name = document.createElement("div");
+      name.className = "username";
+      name.textContent = data.username;
+
+      const text = document.createElement("div");
+      text.textContent = data.message;
+
+      div.appendChild(name);
+      div.appendChild(text);
+
+      messages.appendChild(div);
+    }
+
+    // История сообщений при подключении
+    socket.on("chat history", (history) => {
+      messages.innerHTML = "";
+
+      history.forEach((data) => {
+        addMessage(data);
+      });
+
+      messages.scrollTop = messages.scrollHeight;
     });
 
-    message.value = "";
-    message.focus();
-  });
-</script>
+    // Новое сообщение
+    socket.on("chat message", (data) => {
+      addMessage(data);
+      messages.scrollTop = messages.scrollHeight;
+    });
+
+    // Отправка сообщения
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+
+      const name = username.value.trim();
+      const text = message.value.trim();
+
+      if (!name || !text) {
+        return;
+      }
+
+      socket.emit("chat message", {
+        username: name,
+        message: text
+      });
+
+      message.value = "";
+      message.focus();
+    });
+  </script>
+
+</body>
+</html>
