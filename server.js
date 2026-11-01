@@ -15,9 +15,10 @@ const messages = [];
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
 
-  // Отправляем новому пользователю старые сообщения
+  // Отправляем историю новому пользователю
   socket.emit("chat history", messages);
 
+  // Получаем новое сообщение
   socket.on("chat message", (data) => {
     const newMessage = {
       username: data.username || "Anonymous",
@@ -25,15 +26,14 @@ io.on("connection", (socket) => {
       time: Date.now()
     };
 
-    // Сохраняем сообщение в памяти сервера
     messages.push(newMessage);
 
-    // Ограничиваем историю 100 сообщениями
+    // Храним максимум 100 сообщений
     if (messages.length > 100) {
       messages.shift();
     }
 
-    // Отправляем всем пользователям
+    // Отправляем всем подключенным пользователям
     io.emit("chat message", newMessage);
   });
 
